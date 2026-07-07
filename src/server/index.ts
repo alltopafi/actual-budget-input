@@ -22,6 +22,10 @@ import {
 
 const app = express();
 
+// Trust reverse proxy (e.g. Nginx, Kubernetes Ingress, Cloudflare)
+// Required for express-rate-limit to correctly identify client IPs
+app.set('trust proxy', true);
+
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
