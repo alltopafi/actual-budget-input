@@ -19,6 +19,7 @@ import {
   getPayees, 
   createTransaction 
 } from './actual';
+import { initCron } from './cron';
 
 const app = express();
 
@@ -225,6 +226,7 @@ app.listen(port, async () => {
   
   try {
     await initActual();
+    initCron();
   } catch (error) {
     console.error('CRITICAL: Actual Budget API failed to initialize during startup.');
     console.error('The server will continue to run, but budget operations will fail until resolved.');
