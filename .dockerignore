@@ -1,0 +1,25 @@
+# Ignore dependencies
+node_modules/
+.npm/
+
+# Ignore compiled builds
+dist/
+
+# Ignore local database and cache data
+data/
+
+# Ignore local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Ignore git logs and settings
+.git/
+.github/
+.gitignore
+
+# Ignore local logs and documentation
+*.log
+README.md
+Dockerfile
+.dockerignore

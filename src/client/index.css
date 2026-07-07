@@ -1,0 +1,425 @@
+/* Design System Variables */
+:root {
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Color Palette */
+  --bg-app: #090d16;
+  --bg-glow-1: #1e1b4b;
+  --bg-glow-2: #0f172a;
+  
+  --surface-glass: rgba(20, 28, 47, 0.65);
+  --surface-glass-hover: rgba(30, 41, 59, 0.8);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-border-focus: rgba(99, 102, 241, 0.5);
+  
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-glow: rgba(99, 102, 241, 0.25);
+  
+  --color-success: #10b981;
+  --color-success-bg: rgba(16, 185, 129, 0.1);
+  --color-danger: #ef4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.15);
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-lg: 0 12px 48px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Reset and Core Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Atmospheric Background Glows */
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -1;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+body::before {
+  background-color: var(--bg-glow-1);
+  top: 10%;
+  left: -50px;
+}
+
+body::after {
+  background-color: var(--color-primary-glow);
+  bottom: 10%;
+  right: -50px;
+}
+
+#root {
+  width: 100%;
+  max-width: 480px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  justify-content: center;
+}
+
+/* Card layout & Glassmorphism */
+.glass-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--surface-border);
+  border-radius: 24px;
+  padding: 28px 24px;
+  width: 100%;
+  box-shadow: var(--shadow-md);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Header typography */
+.app-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.app-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+
+.app-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+/* Custom Input Styling */
+.form-input {
+  width: 100%;
+  background: rgba(10, 15, 28, 0.6);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 46px;
+  -webkit-appearance: none;
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+
+textarea.form-input {
+  height: 80px;
+  resize: none;
+}
+
+/* Date Picker styling */
+.form-input[type="date"] {
+  position: relative;
+}
+
+/* Custom select dropdown */
+select.form-input {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%2394a3b8' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 36px;
+}
+
+/* Combobox (Searchable Autocomplete Payee) */
+.combobox-container {
+  position: relative;
+  width: 100%;
+}
+
+.combobox-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #0f172a;
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  margin-top: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.combobox-option {
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.combobox-option:hover,
+.combobox-option.selected {
+  background-color: var(--surface-glass-hover);
+}
+
+.combobox-option-badge {
+  font-size: 0.75rem;
+  background: var(--color-primary-glow);
+  color: #a5b4fc;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Primary Button Styling */
+.btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  border: none;
+  border-radius: 14px;
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px var(--color-primary-glow);
+}
+
+.btn:hover {
+  box-shadow: 0 6px 18px var(--color-primary-glow);
+  opacity: 0.95;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  background: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--text-secondary);
+  box-shadow: none;
+  margin-top: 10px;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-glass-hover);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+
+/* Toast Messages */
+.toast {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-left: 4px solid;
+}
+
+.toast-success {
+  background: var(--color-success-bg);
+  border-left-color: var(--color-success);
+  color: #a7f3d0;
+}
+
+.toast-error {
+  background: var(--color-danger-bg);
+  border-left-color: var(--color-danger);
+  color: #fca5a5;
+}
+
+.toast-info {
+  background: rgba(59, 130, 246, 0.15);
+  border-left-color: #3b82f6;
+  color: #bfdbfe;
+}
+
+.toast-icon {
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Loading Spinners */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+/* Logout Button Link */
+.logout-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.logout-link {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+}
+
+.logout-link:hover {
+  color: var(--color-danger);
+}
+
+/* Amount Input decoration */
+.amount-wrapper {
+  position: relative;
+}
+
+.amount-symbol {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.amount-input {
+  padding-left: 28px !important;
+}
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Scrollbar for Autocomplete options */
+.combobox-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.combobox-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.combobox-options::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.combobox-options::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile responsive media queries */
+@media (max-width: 480px) {
+  body {
+    align-items: flex-start;
+  }
+  
+  #root {
+    padding: 10px;
+    min-height: 100vh;
+  }
+  
+  .glass-card {
+    border-radius: 20px;
+    padding: 20px 16px;
+    margin-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
