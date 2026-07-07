@@ -14,6 +14,7 @@ export interface Config {
   ACTUAL_SERVER_PASSWORD: string;
   ACTUAL_BUDGET_SYNC_ID: string;
   ACTUAL_DATA_DIR: string;
+  TRANSACTION_WEBHOOK_URL?: string;
 }
 
 const requiredEnv = [
@@ -45,5 +46,6 @@ export const config: Config = {
   ACTUAL_SERVER_URL: process.env.ACTUAL_SERVER_URL!,
   ACTUAL_SERVER_PASSWORD: process.env.ACTUAL_SERVER_PASSWORD!,
   ACTUAL_BUDGET_SYNC_ID: process.env.ACTUAL_BUDGET_SYNC_ID!,
-  ACTUAL_DATA_DIR: process.env.ACTUAL_DATA_DIR || path.join(process.cwd(), 'data')
+  ACTUAL_DATA_DIR: process.env.ACTUAL_DATA_DIR || path.join(process.cwd(), 'data'),
+  TRANSACTION_WEBHOOK_URL: process.env.TRANSACTION_WEBHOOK_URL
 };

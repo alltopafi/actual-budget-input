@@ -130,5 +130,76 @@ export async function createTransaction(accountId: string, data: {
     throw new Error('Transaction was added locally but server sync failed: ' + (err as Error).message);
   }
 
+  // Trigger optional webhook notification in the background
+  if (config.TRANSACTION_WEBHOOK_URL) {
+    (async () => {
+      try {
+        let accountName = 'Unknown Account';
+        try {
+          const accounts = await getAccounts();
+          const acc = accounts.find((a: any) => a.id === accountId);
+          if (acc) accountName = acc.name;
+        } catch (e) {
+          console.warn('Failed to resolve account name for webhook:', e);
+        }
+
+        let categoryName = 'No Category / Outflow';
+        if (data.categoryId) {
+          try {
+            const groups = await getCategoryGroups();
+            for (const group of groups) {
+              const cat = group.categories?.find((c: any) => c.id === data.categoryId);
+              if (cat) {
+                categoryName = `${group.name} - ${cat.name}`;
+                break;
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to resolve category name for webhook:', e);
+          }
+        }
+
+        let payeeName = data.payeeName || 'Unknown Payee';
+        if (data.payeeId) {
+          try {
+            const payees = await getPayees();
+            const p = payees.find((payee: any) => payee.id === data.payeeId);
+            if (p) payeeName = p.name;
+          } catch (e) {
+            console.warn('Failed to resolve payee name for webhook:', e);
+          }
+        }
+
+        console.log('Sending transaction webhook to:', config.TRANSACTION_WEBHOOK_URL);
+        const response = await (globalThis as any).fetch(config.TRANSACTION_WEBHOOK_URL!, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            accountId,
+            accountName,
+            date: data.date,
+            amount: data.amount,
+            amountCents,
+            payeeId: data.payeeId,
+            payeeName,
+            categoryId: data.categoryId,
+            categoryName,
+            notes: data.notes || ""
+          })
+        });
+
+        if (!response.ok) {
+          console.error(`Webhook error: received status ${response.status}`);
+        } else {
+          console.log('Webhook sent successfully');
+        }
+      } catch (err) {
+        console.error('Failed to send transaction webhook:', err);
+      }
+    })();
+  }
+
   return { success: true };
 }
