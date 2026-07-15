@@ -17,7 +17,10 @@ import {
   getAccounts, 
   getCategoryGroups, 
   getPayees, 
-  createTransaction 
+  createTransaction,
+  resolveAccountByName,
+  resolveCategoryByName,
+  resolvePayeeByName
 } from './actual';
 
 const app = express();
@@ -191,6 +194,109 @@ app.post('/api/transactions', authMiddleware, async (req, res) => {
     return res.json(result);
   } catch (error) {
     console.error('Error creating transaction:', error);
+    return res.status(500).json({ 
+      error: (error as Error).message || 'Failed to create transaction in Actual Budget' 
+    });
+  }
+});
+
+/**
+ * POST /api/external/transactions
+ * Secure endpoint for automated external scripts.
+ * Authenticates via Authorization Bearer token or X-API-Key header.
+ */
+app.post('/api/external/transactions', async (req, res) => {
+  if (!config.API_KEY) {
+    return res.status(501).json({ error: 'API key authentication is not configured on this server.' });
+  }
+
+  const authHeader = req.headers['authorization'];
+  const apiKeyHeader = req.headers['x-api-key'];
+  let token = '';
+
+  if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+    token = authHeader.substring(7);
+  } else if (apiKeyHeader) {
+    token = String(apiKeyHeader);
+  }
+
+  if (!token || !safeCompare(token, config.API_KEY)) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
+  }
+
+  const { accountId, accountName, date, amount, payeeId, payeeName, categoryId, categoryName, notes } = req.body;
+
+  // Resolve Account
+  let resolvedAccountId = accountId;
+  if (!resolvedAccountId) {
+    if (!accountName) {
+      return res.status(400).json({ error: 'Account ID (accountId) or Account Name (accountName) is required' });
+    }
+    resolvedAccountId = await resolveAccountByName(accountName);
+    if (!resolvedAccountId) {
+      return res.status(400).json({ error: `Account with name "${accountName}" could not be found` });
+    }
+  }
+
+  // Parse Date (default to today)
+  const finalDate = date || new Date().toISOString().split('T')[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(finalDate)) {
+    return res.status(400).json({ error: 'Date must be in YYYY-MM-DD format' });
+  }
+
+  // Validate Amount
+  if (amount === undefined || isNaN(Number(amount))) {
+    return res.status(400).json({ error: 'Amount is required and must be a valid decimal number' });
+  }
+
+  // Resolve Payee
+  let resolvedPayeeId = payeeId;
+  let resolvedPayeeName = payeeName;
+
+  if (!resolvedPayeeId) {
+    if (!resolvedPayeeName) {
+      return res.status(400).json({ error: 'Either Payee ID (payeeId) or Payee Name (payeeName) is required' });
+    }
+    const existingPayeeId = await resolvePayeeByName(resolvedPayeeName);
+    if (existingPayeeId) {
+      resolvedPayeeId = existingPayeeId;
+      resolvedPayeeName = undefined;
+    }
+  }
+
+  // Resolve Category
+  let resolvedCategoryId = categoryId;
+  if (!resolvedCategoryId && categoryName) {
+    resolvedCategoryId = await resolveCategoryByName(categoryName);
+    if (!resolvedCategoryId) {
+      return res.status(400).json({ error: `Category with name "${categoryName}" could not be found` });
+    }
+  }
+
+  try {
+    const result = await createTransaction(resolvedAccountId, {
+      date: finalDate,
+      amount: Number(amount),
+      payeeId: resolvedPayeeId,
+      payeeName: resolvedPayeeName,
+      categoryId: resolvedCategoryId,
+      notes
+    });
+    return res.status(201).json({
+      success: true,
+      message: 'Transaction added and synced successfully',
+      data: {
+        accountId: resolvedAccountId,
+        date: finalDate,
+        amount: Number(amount),
+        payeeId: resolvedPayeeId,
+        payeeName: resolvedPayeeName || undefined,
+        categoryId: resolvedCategoryId || undefined,
+        notes
+      }
+    });
+  } catch (error) {
+    console.error('Error creating external transaction:', error);
     return res.status(500).json({ 
       error: (error as Error).message || 'Failed to create transaction in Actual Budget' 
     });

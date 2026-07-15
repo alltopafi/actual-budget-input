@@ -77,6 +77,46 @@ export async function getPayees() {
   return payees;
 }
 
+export async function resolveAccountByName(name: string): Promise<string | undefined> {
+  const accounts = await getAccounts();
+  const cleanName = name.trim().toLowerCase();
+  const match = accounts.find((a: any) => a.name.toLowerCase() === cleanName);
+  return match ? match.id : undefined;
+}
+
+export async function resolveCategoryByName(name: string): Promise<string | undefined> {
+  const groups = await getCategoryGroups();
+  const cleanName = name.trim().toLowerCase();
+
+  const separatorMatch = name.split(/\s*[-/]\s*/);
+  if (separatorMatch.length === 2) {
+    const [groupName, catName] = separatorMatch;
+    const cleanGroup = groupName.trim().toLowerCase();
+    const cleanCat = catName.trim().toLowerCase();
+    
+    for (const group of groups) {
+      if (group.name.toLowerCase() === cleanGroup) {
+        const match = group.categories?.find((c: any) => c.name.toLowerCase() === cleanCat);
+        if (match) return match.id;
+      }
+    }
+  }
+
+  for (const group of groups) {
+    const match = group.categories?.find((c: any) => c.name.toLowerCase() === cleanName);
+    if (match) return match.id;
+  }
+
+  return undefined;
+}
+
+export async function resolvePayeeByName(name: string): Promise<string | undefined> {
+  const payees = await getPayees();
+  const cleanName = name.trim().toLowerCase();
+  const match = payees.find((p: any) => p.name.toLowerCase() === cleanName);
+  return match ? match.id : undefined;
+}
+
 export async function createTransaction(accountId: string, data: {
   date: string;
   amount: number;
