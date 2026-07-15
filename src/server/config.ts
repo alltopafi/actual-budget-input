@@ -16,6 +16,8 @@ export interface Config {
   ACTUAL_DATA_DIR: string;
   TRANSACTION_WEBHOOK_URL?: string;
   API_KEY?: string;
+  GOOGLE_SHEETS_ENABLED?: boolean;
+  GOOGLE_SHEETS_SCRIPT_URL?: string;
 }
 
 const requiredEnv = [
@@ -49,5 +51,7 @@ export const config: Config = {
   ACTUAL_BUDGET_SYNC_ID: process.env.ACTUAL_BUDGET_SYNC_ID!,
   ACTUAL_DATA_DIR: process.env.ACTUAL_DATA_DIR || path.join(process.cwd(), 'data'),
   TRANSACTION_WEBHOOK_URL: process.env.TRANSACTION_WEBHOOK_URL,
-  API_KEY: process.env.API_KEY
+  API_KEY: process.env.API_KEY,
+  GOOGLE_SHEETS_ENABLED: process.env.GOOGLE_SHEETS_ENABLED === 'true',
+  GOOGLE_SHEETS_SCRIPT_URL: process.env.GOOGLE_SHEETS_SCRIPT_URL
 };

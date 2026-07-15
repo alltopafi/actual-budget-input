@@ -170,8 +170,8 @@ export async function createTransaction(accountId: string, data: {
     throw new Error('Transaction was added locally but server sync failed: ' + (err as Error).message);
   }
 
-  // Trigger optional webhook notification in the background
-  if (config.TRANSACTION_WEBHOOK_URL) {
+  // Trigger background webhooks if configured
+  if (config.TRANSACTION_WEBHOOK_URL || (config.GOOGLE_SHEETS_ENABLED && config.GOOGLE_SHEETS_SCRIPT_URL)) {
     (async () => {
       try {
         let accountName = 'Unknown Account';
@@ -183,6 +183,8 @@ export async function createTransaction(accountId: string, data: {
           console.warn('Failed to resolve account name for webhook:', e);
         }
 
+        let categoryGroup = 'Uncategorized';
+        let categorySub = 'Uncategorized';
         let categoryName = 'No Category / Outflow';
         if (data.categoryId) {
           try {
@@ -190,6 +192,8 @@ export async function createTransaction(accountId: string, data: {
             for (const group of groups) {
               const cat = group.categories?.find((c: any) => c.id === data.categoryId);
               if (cat) {
+                categoryGroup = group.name;
+                categorySub = cat.name;
                 categoryName = `${group.name} - ${cat.name}`;
                 break;
               }
@@ -210,33 +214,70 @@ export async function createTransaction(accountId: string, data: {
           }
         }
 
-        console.log('Sending transaction webhook to:', config.TRANSACTION_WEBHOOK_URL);
-        const response = await (globalThis as any).fetch(config.TRANSACTION_WEBHOOK_URL!, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            accountId,
-            accountName,
-            date: data.date,
-            amount: data.amount,
-            amountCents,
-            payeeId: data.payeeId,
-            payeeName,
-            categoryId: data.categoryId,
-            categoryName,
-            notes: data.notes || ""
-          })
-        });
+        // 1. Transaction Webhook
+        if (config.TRANSACTION_WEBHOOK_URL) {
+          console.log('Sending transaction webhook to:', config.TRANSACTION_WEBHOOK_URL);
+          try {
+            const response = await (globalThis as any).fetch(config.TRANSACTION_WEBHOOK_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                accountId,
+                accountName,
+                date: data.date,
+                amount: data.amount,
+                amountCents,
+                payeeId: data.payeeId,
+                payeeName,
+                categoryId: data.categoryId,
+                categoryName,
+                notes: data.notes || ""
+              })
+            });
 
-        if (!response.ok) {
-          console.error(`Webhook error: received status ${response.status}`);
-        } else {
-          console.log('Webhook sent successfully');
+            if (!response.ok) {
+              console.error(`Webhook error: received status ${response.status}`);
+            } else {
+              console.log('Webhook sent successfully');
+            }
+          } catch (err) {
+            console.error('Failed to send transaction webhook:', err);
+          }
+        }
+
+        // 2. Google Sheets Webhook
+        if (config.GOOGLE_SHEETS_ENABLED && config.GOOGLE_SHEETS_SCRIPT_URL) {
+          console.log('Sending transaction to Google Sheets:', config.GOOGLE_SHEETS_SCRIPT_URL);
+          try {
+            const sheetsResponse = await (globalThis as any).fetch(config.GOOGLE_SHEETS_SCRIPT_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                date: data.date,
+                amount: data.amount,
+                payeeName,
+                categoryGroup,
+                categorySub,
+                accountName,
+                notes: data.notes || ""
+              })
+            });
+
+            if (!sheetsResponse.ok) {
+              console.error(`Google Sheets error: received status ${sheetsResponse.status}`);
+            } else {
+              console.log('Google Sheets webhook sent successfully');
+            }
+          } catch (sheetsErr) {
+            console.error('Failed to send transaction to Google Sheets:', sheetsErr);
+          }
         }
       } catch (err) {
-        console.error('Failed to send transaction webhook:', err);
+        console.error('Failed to execute background webhooks:', err);
       }
     })();
   }
